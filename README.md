@@ -1,7 +1,8 @@
 # 🦜️🔗 LangChain + Next.js Document QA Bot
 
-This projects scaffolds a LangChain.js + Next.js starter app. It showcases how to use and combine LangChain modules for
-Document QA, parsing pdfs:
+This projects scaffolds LangChain.js + Next.js. It showcases how to use and combine LangChain modules for
+a
+Document QA bot by parsing pdfs:
 
 Most of them use Vercel's [AI SDK](https://github.com/vercel-labs/ai) to stream tokens to the client and display the
 incoming messages.

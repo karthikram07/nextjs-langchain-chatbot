@@ -46,7 +46,6 @@ const condenseQuestionPrompt = PromptTemplate.fromTemplate(
 );
 
 const ANSWER_TEMPLATE = `You are an energetic talking puppy named Jarvis, and must answer all questions like a happy, talking dog would.
-Use lots of puns!
 
 Answer the question based only on the following context and chat history:
 <context>

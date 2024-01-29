@@ -10,7 +10,7 @@ import { Document } from "@langchain/core/documents";
 import { RunnableSequence } from "@langchain/core/runnables";
 import {
   BytesOutputParser,
-  StringOutputParser,
+  StringOutputParser
 } from "@langchain/core/output_parsers";
 
 export const runtime = "edge";
@@ -42,10 +42,10 @@ const CONDENSE_QUESTION_TEMPLATE = `Given the following conversation and a follo
 Follow Up Input: {question}
 Standalone question:`;
 const condenseQuestionPrompt = PromptTemplate.fromTemplate(
-  CONDENSE_QUESTION_TEMPLATE,
+  CONDENSE_QUESTION_TEMPLATE
 );
 
-const ANSWER_TEMPLATE = `You are an energetic talking puppy named Dana, and must answer all questions like a happy, talking dog would.
+const ANSWER_TEMPLATE = `You are an energetic talking puppy named Jarvis, and must answer all questions like a happy, talking dog would.
 Use lots of puns!
 
 Answer the question based only on the following context and chat history:
@@ -75,18 +75,18 @@ export async function POST(req: NextRequest) {
     const currentMessageContent = messages[messages.length - 1].content;
 
     const model = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo-1106",
-      temperature: 0.2,
+      modelName: "gpt-4",
+      temperature: 0
     });
 
     const client = createClient(
       process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PRIVATE_KEY!,
+      process.env.SUPABASE_PRIVATE_KEY!
     );
     const vectorstore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
       client,
       tableName: "documents",
-      queryName: "match_documents",
+      queryName: "match_documents"
     });
 
     /**
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
     const standaloneQuestionChain = RunnableSequence.from([
       condenseQuestionPrompt,
       model,
-      new StringOutputParser(),
+      new StringOutputParser()
     ]);
 
     let resolveWithDocuments: (value: Document[]) => void;
@@ -114,9 +114,9 @@ export async function POST(req: NextRequest) {
         {
           handleRetrieverEnd(documents) {
             resolveWithDocuments(documents);
-          },
-        },
-      ],
+          }
+        }
+      ]
     });
 
     const retrievalChain = retriever.pipe(combineDocumentsFn);
@@ -125,27 +125,27 @@ export async function POST(req: NextRequest) {
       {
         context: RunnableSequence.from([
           (input) => input.question,
-          retrievalChain,
+          retrievalChain
         ]),
         chat_history: (input) => input.chat_history,
-        question: (input) => input.question,
+        question: (input) => input.question
       },
       answerPrompt,
-      model,
+      model
     ]);
 
     const conversationalRetrievalQAChain = RunnableSequence.from([
       {
         question: standaloneQuestionChain,
-        chat_history: (input) => input.chat_history,
+        chat_history: (input) => input.chat_history
       },
       answerChain,
-      new BytesOutputParser(),
+      new BytesOutputParser()
     ]);
 
     const stream = await conversationalRetrievalQAChain.stream({
       question: currentMessageContent,
-      chat_history: formatVercelMessages(previousMessages),
+      chat_history: formatVercelMessages(previousMessages)
     });
 
     const documents = await documentPromise;
@@ -154,17 +154,17 @@ export async function POST(req: NextRequest) {
         documents.map((doc) => {
           return {
             pageContent: doc.pageContent.slice(0, 50) + "...",
-            metadata: doc.metadata,
+            metadata: doc.metadata
           };
-        }),
-      ),
+        })
+      )
     ).toString("base64");
 
     return new StreamingTextResponse(stream, {
       headers: {
         "x-message-index": (previousMessages.length + 1).toString(),
-        "x-sources": serializedSources,
-      },
+        "x-sources": serializedSources
+      }
     });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: e.status ?? 500 });

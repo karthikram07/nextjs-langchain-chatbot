@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
 
     const docs = await loader.loadAndSplit(
       new RecursiveCharacterTextSplitter({
-        separator: ". ",
         chunkSize: 256,
         chunkOverlap: 20
       })

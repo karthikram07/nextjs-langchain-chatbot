@@ -40,7 +40,7 @@ Follow Up Input: {question}
 Standalone question:`;
 const condenseQuestionPrompt = PromptTemplate.fromTemplate(CONDENSE_QUESTION_TEMPLATE);
 
-const ANSWER_TEMPLATE = `You are Ironman's assistant Jarvis, and must answer all questions like Jarvis does from the Ironman Movies.
+const ANSWER_TEMPLATE = `You are Ironman's assistant Jarvis, and must answer all questions like Jarvis does from the Ironman Movies. English only unless otherwise specified.
 
 Answer the question based only on the following context and chat history:
 <context>

@@ -1,36 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import { Message as VercelChatMessage, StreamingTextResponse } from "ai";
+import { NextRequest, NextResponse } from 'next/server';
+import { Message as VercelChatMessage, StreamingTextResponse } from 'ai';
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
-import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
-import { Document } from "@langchain/core/documents";
-import { RunnableSequence } from "@langchain/core/runnables";
-import {
-  BytesOutputParser,
-  StringOutputParser
-} from "@langchain/core/output_parsers";
+import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase';
+import { Document } from '@langchain/core/documents';
+import { RunnableSequence } from '@langchain/core/runnables';
+import { BytesOutputParser, StringOutputParser } from '@langchain/core/output_parsers';
 
-export const runtime = "edge";
+export const runtime = 'edge';
 
 const combineDocumentsFn = (docs: Document[]) => {
   const serializedDocs = docs.map((doc) => doc.pageContent);
-  return serializedDocs.join("\n\n");
+  return serializedDocs.join('\n\n');
 };
 
 const formatVercelMessages = (chatHistory: VercelChatMessage[]) => {
   const formattedDialogueTurns = chatHistory.map((message) => {
-    if (message.role === "user") {
+    if (message.role === 'user') {
       return `Human: ${message.content}`;
-    } else if (message.role === "assistant") {
+    } else if (message.role === 'assistant') {
       return `Assistant: ${message.content}`;
     } else {
       return `${message.role}: ${message.content}`;
     }
   });
-  return formattedDialogueTurns.join("\n");
+  return formattedDialogueTurns.join('\n');
 };
 
 const CONDENSE_QUESTION_TEMPLATE = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
@@ -41,11 +38,9 @@ const CONDENSE_QUESTION_TEMPLATE = `Given the following conversation and a follo
 
 Follow Up Input: {question}
 Standalone question:`;
-const condenseQuestionPrompt = PromptTemplate.fromTemplate(
-  CONDENSE_QUESTION_TEMPLATE
-);
+const condenseQuestionPrompt = PromptTemplate.fromTemplate(CONDENSE_QUESTION_TEMPLATE);
 
-const ANSWER_TEMPLATE = `You are an energetic talking puppy named Jarvis, and must answer all questions like a happy, talking dog would.
+const ANSWER_TEMPLATE = `You are Ironman's assistant Jarvis, and must answer all questions like Jarvis does from the Ironman Movies.
 
 Answer the question based only on the following context and chat history:
 <context>
@@ -74,18 +69,15 @@ export async function POST(req: NextRequest) {
     const currentMessageContent = messages[messages.length - 1].content;
 
     const model = new ChatOpenAI({
-      modelName: "gpt-4",
+      modelName: 'gpt-4o-mini',
       temperature: 0
     });
 
-    const client = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PRIVATE_KEY!
-    );
+    const client = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PRIVATE_KEY!);
     const vectorstore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
       client,
-      tableName: "documents",
-      queryName: "match_documents"
+      tableName: 'documents',
+      queryName: 'match_documents'
     });
 
     /**
@@ -97,11 +89,7 @@ export async function POST(req: NextRequest) {
      * You can also use the "createRetrievalChain" method with a
      * "historyAwareRetriever" to get something prebaked.
      */
-    const standaloneQuestionChain = RunnableSequence.from([
-      condenseQuestionPrompt,
-      model,
-      new StringOutputParser()
-    ]);
+    const standaloneQuestionChain = RunnableSequence.from([condenseQuestionPrompt, model, new StringOutputParser()]);
 
     let resolveWithDocuments: (value: Document[]) => void;
     const documentPromise = new Promise<Document[]>((resolve) => {
@@ -122,10 +110,7 @@ export async function POST(req: NextRequest) {
 
     const answerChain = RunnableSequence.from([
       {
-        context: RunnableSequence.from([
-          (input) => input.question,
-          retrievalChain
-        ]),
+        context: RunnableSequence.from([(input) => input.question, retrievalChain]),
         chat_history: (input) => input.chat_history,
         question: (input) => input.question
       },
@@ -152,17 +137,17 @@ export async function POST(req: NextRequest) {
       JSON.stringify(
         documents.map((doc) => {
           return {
-            pageContent: doc.pageContent.slice(0, 50) + "...",
+            pageContent: doc.pageContent.slice(0, 50) + '...',
             metadata: doc.metadata
           };
         })
       )
-    ).toString("base64");
+    ).toString('base64');
 
     return new StreamingTextResponse(stream, {
       headers: {
-        "x-message-index": (previousMessages.length + 1).toString(),
-        "x-sources": serializedSources
+        'x-message-index': (previousMessages.length + 1).toString(),
+        'x-sources': serializedSources
       }
     });
   } catch (e: any) {

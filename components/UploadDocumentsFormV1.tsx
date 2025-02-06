@@ -5,7 +5,7 @@ import { UploadDropzone } from '@bytescale/upload-widget-react';
 import { CircleLoader } from 'react-spinners';
 
 const fileUploadOptions = {
-  apiKey: process.env.NEXT_PUBLIC_BYTESCALE_API_KEY!, // This is your API key.
+  apiKey: 'public_223k2472uwrfrVTY5UbdRXjCscXm', // This is your API key.
   maxFileCount: 1,
   showFinishButton: true, // Note: You must use 'onUpdate' if you set 'showFinishButton: false' (default).
   styles: {
